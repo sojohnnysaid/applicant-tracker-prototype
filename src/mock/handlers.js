@@ -1,4 +1,6 @@
 import { rest } from 'msw';
+// Debug log to verify this file is being loaded
+console.log('Loading MSW handlers');
 
 // Example fake application data
 const applications = [

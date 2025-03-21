@@ -1,14 +1,15 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
-// User role store - starts as null/guest, updated on login
-export const userRole = writable(null);
+// Check localStorage for saved role on initialization
+const savedRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+
+// User role store - starts as saved role or null, updated on login
+export const userRole = writable(savedRole);
 
 // Helper function to check if user has specific role
 export function hasRole(role) {
-  let currentRole;
-  userRole.subscribe(value => {
-    currentRole = value;
-  })();
-  
-  return currentRole === role;
+  return get(userRole) === role;
 }
+
+// For debugging
+console.log('Initial role from localStorage:', savedRole);
