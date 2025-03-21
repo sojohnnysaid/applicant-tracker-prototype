@@ -206,6 +206,14 @@
       >
         Status History
       </button>
+      {#if application.documents && application.documents.length > 0}
+        <button 
+          class:active={activeTab === 'documents'} 
+          on:click={() => activeTab = 'documents'}
+        >
+          Documents
+        </button>
+      {/if}
       {#if application.rwr && application.rwr.length > 0}
         <button 
           class:active={activeTab === 'rwr'} 
@@ -276,6 +284,65 @@
               </div>
             {/if}
           </div>
+          
+          {#if application.academicInfo}
+            <h4 class="section-subheader">Academic Information</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">University:</span>
+                <span class="detail-value">{application.academicInfo.university || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Department:</span>
+                <span class="detail-value">{application.academicInfo.department || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Degree:</span>
+                <span class="detail-value">{application.academicInfo.degree || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">GPA:</span>
+                <span class="detail-value">{application.academicInfo.gpa || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Expected Graduation:</span>
+                <span class="detail-value">{application.academicInfo.graduationDate || 'N/A'}</span>
+              </div>
+            </div>
+          {/if}
+          
+          {#if application.documents && application.documents.length > 0}
+            <h4 class="section-subheader">Application Documents</h4>
+            <div class="documents-list">
+              {#each application.documents as doc}
+                <div class="document-item {doc.verified ? 'verified' : 'unverified'}">
+                  <div class="document-header">
+                    <span class="document-type">{doc.type}</span>
+                    <span class="document-status">
+                      {#if doc.submitted}
+                        {#if doc.verified}
+                          <span class="status-badge status-eligible">Verified</span>
+                        {:else}
+                          <span class="status-badge status-pending">Submitted</span>
+                        {/if}
+                      {:else}
+                        <span class="status-badge status-non-compliant">Missing</span>
+                      {/if}
+                    </span>
+                  </div>
+                  {#if doc.type === 'Reference Letters' && doc.count}
+                    <div class="document-detail">
+                      <span class="count-label">References received:</span>
+                      <span class="count-value">{doc.count}/3</span>
+                    </div>
+                  {/if}
+                  {#if doc.notes}
+                    <div class="document-notes">{doc.notes}</div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
         </div>
         
         <!-- Program Officer-specific reinstatement section -->
@@ -332,6 +399,73 @@
               <div class="legend-item">
                 <span class="status-badge status-pending">Pending</span>
                 <span class="legend-description">Application awaiting review</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {/if}
+      
+      <!-- Documents Tab -->
+      {#if activeTab === 'documents' && application.documents && application.documents.length > 0}
+        <div class="detail-section">
+          <h4>Application Documents</h4>
+          <p class="doc-description">This tab shows all documents associated with this application and their verification status.</p>
+          
+          <div class="document-grid">
+            {#each application.documents as doc}
+              <div class="document-card {doc.verified ? 'verified' : doc.submitted ? 'submitted' : 'missing'}">
+                <div class="document-icon">
+                  <span class="material-icon">
+                    {#if doc.verified}
+                      ✓
+                    {:else if doc.submitted}
+                      ⌛
+                    {:else}
+                      ✗
+                    {/if}
+                  </span>
+                </div>
+                <div class="document-info">
+                  <h5 class="document-title">{doc.type}</h5>
+                  <div class="document-status-info">
+                    <span class="document-status-badge 
+                      {doc.verified ? 'status-eligible' : doc.submitted ? 'status-pending' : 'status-non-compliant'}">
+                      {doc.verified ? 'Verified' : doc.submitted ? 'Submitted' : 'Missing'}
+                    </span>
+                    {#if doc.type === 'Reference Letters' && doc.count !== undefined}
+                      <span class="ref-count">{doc.count}/3 received</span>
+                    {/if}
+                  </div>
+                  {#if doc.notes}
+                    <p class="document-note">{doc.notes}</p>
+                  {/if}
+                  {#if $isScreener || $isManager}
+                    <div class="document-actions">
+                      <a href="#" class="document-action-link">Mark as verified</a>
+                      {#if !doc.submitted}
+                        <a href="#" class="document-action-link">Request document</a>
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+          
+          <div class="document-legend">
+            <h5>Document Status Legend:</h5>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span class="status-badge status-eligible">Verified</span>
+                <span class="legend-description">Document has been received and validated</span>
+              </div>
+              <div class="legend-item">
+                <span class="status-badge status-pending">Submitted</span>
+                <span class="legend-description">Document received but pending verification</span>
+              </div>
+              <div class="legend-item">
+                <span class="status-badge status-non-compliant">Missing</span>
+                <span class="legend-description">Required document has not been submitted</span>
               </div>
             </div>
           </div>
@@ -437,7 +571,7 @@
 
 <style>
   .application-detail {
-    max-width: 1000px;
+    max-width: 980px;
     margin: 0 auto;
     padding: 1rem;
   }
@@ -837,6 +971,207 @@
     background-color: #5a6268;
   }
   
+  .section-subheader {
+    font-size: 1rem;
+    color: #495057;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .documents-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .document-item {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    border-left: 3px solid #dee2e6;
+  }
+  
+  .document-item.verified {
+    border-left-color: #28a745;
+  }
+  
+  .document-item.unverified {
+    border-left-color: #ffc107;
+  }
+  
+  .document-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .document-type {
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .document-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .count-label {
+    color: #6c757d;
+  }
+  
+  .count-value {
+    font-weight: 600;
+  }
+  
+  .document-notes {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #fff;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-style: italic;
+  }
+  
+  /* Document tab styles */
+  .doc-description {
+    margin-bottom: 1.5rem;
+    color: #6c757d;
+  }
+  
+  .document-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .document-card {
+    display: flex;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    gap: 1rem;
+    border-left: 4px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .document-card.verified {
+    border-left-color: #28a745;
+  }
+  
+  .document-card.submitted {
+    border-left-color: #ffc107;
+  }
+  
+  .document-card.missing {
+    border-left-color: #dc3545;
+  }
+  
+  .document-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .material-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  
+  .document-card.verified .material-icon {
+    color: #28a745;
+  }
+  
+  .document-card.submitted .material-icon {
+    color: #ffc107;
+  }
+  
+  .document-card.missing .material-icon {
+    color: #dc3545;
+  }
+  
+  .document-info {
+    flex: 1;
+  }
+  
+  .document-title {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: #495057;
+  }
+  
+  .document-status-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .document-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .ref-count {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+  
+  .document-note {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+  
+  .document-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .document-action-link {
+    font-size: 0.85rem;
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .document-action-link:hover {
+    text-decoration: underline;
+  }
+  
+  .document-legend {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .document-legend h5 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    color: #495057;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .application-header {
@@ -847,7 +1182,8 @@
     .detail-grid,
     .rwr-list,
     .rwr-details,
-    .legend-items {
+    .legend-items,
+    .documents-list {
       grid-template-columns: 1fr;
     }
     

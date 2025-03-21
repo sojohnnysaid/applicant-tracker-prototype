@@ -1,6 +1,9 @@
 // Updated main.js with proper MSW initialization
 console.log('Main.js executed - With improved MSW setup');
 
+// Import our CSS
+import './app.css';
+
 // First import the app
 import App from './App.svelte';
 

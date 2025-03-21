@@ -393,7 +393,7 @@
 <style>
   .rwr-container {
     padding: 1rem;
-    max-width: 1200px;
+    max-width: 980px;
     margin: 0 auto;
   }
   

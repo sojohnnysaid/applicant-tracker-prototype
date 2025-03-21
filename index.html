@@ -6,6 +6,19 @@
   <title>GRFP Application Tracker</title>
   <!-- Using CDN for Sakura CSS -->
   <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
+  <!-- Override Sakura's width constraint -->
+  <style>
+    body {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    main, article, header, footer, section {
+      max-width: 980px !important;
+      width: 100% !important;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
   <!-- App styles are in App.svelte -->
 </head>
 <body>

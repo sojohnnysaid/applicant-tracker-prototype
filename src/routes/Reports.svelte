@@ -311,6 +311,8 @@
 <style>
   .reports-container {
     padding: 1rem;
+    max-width: 980px;
+    margin: 0 auto;
   }
   
   .dashboard {

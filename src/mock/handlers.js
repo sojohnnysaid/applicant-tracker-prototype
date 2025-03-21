@@ -44,6 +44,19 @@ const mockData = {
           changedBy: 'Screener', 
           note: 'All requirements met' 
         }
+      ],
+      academicInfo: {
+        university: 'Stanford University',
+        department: 'Computer Science',
+        degree: 'PhD',
+        gpa: '3.92',
+        graduationDate: '2028-05'
+      },
+      documents: [
+        { type: 'Transcript', submitted: true, verified: true, notes: 'Official transcript verified' },
+        { type: 'Research Proposal', submitted: true, verified: true, notes: 'Meets all guidelines' },
+        { type: 'Personal Statement', submitted: true, verified: true, notes: 'Complete' },
+        { type: 'Reference Letters', submitted: true, verified: true, count: 3, notes: 'All references received' }
       ]
     },
     { 
@@ -74,6 +87,19 @@ const mockData = {
           changedBy: 'Screener', 
           note: 'Missing required transcript' 
         }
+      ],
+      academicInfo: {
+        university: 'MIT',
+        department: 'Physics',
+        degree: 'PhD',
+        gpa: '3.85',
+        graduationDate: '2027-06'
+      },
+      documents: [
+        { type: 'Transcript', submitted: false, verified: false, notes: 'Missing transcript' },
+        { type: 'Research Proposal', submitted: true, verified: true, notes: 'Meets all guidelines' },
+        { type: 'Personal Statement', submitted: true, verified: true, notes: 'Complete' },
+        { type: 'Reference Letters', submitted: true, verified: true, count: 3, notes: 'All references received' }
       ]
     },
     { 
@@ -104,6 +130,20 @@ const mockData = {
           changedBy: 'Manager', 
           note: 'Previous fellowship recipient' 
         }
+      ],
+      academicInfo: {
+        university: 'University of California, Berkeley',
+        department: 'Integrative Biology',
+        degree: 'PhD',
+        gpa: '3.9',
+        graduationDate: '2028-05'
+      },
+      documents: [
+        { type: 'Transcript', submitted: true, verified: true, notes: 'Transcript complete' },
+        { type: 'Research Proposal', submitted: true, verified: true, notes: 'Research proposal well-written' },
+        { type: 'Personal Statement', submitted: true, verified: true, notes: 'Personal statement complete' },
+        { type: 'Reference Letters', submitted: true, verified: true, count: 3, notes: 'All references received' },
+        { type: 'Previous Award Documentation', submitted: true, verified: true, notes: 'Previous NSF fellowship awarded in 2023' }
       ]
     },
     { 

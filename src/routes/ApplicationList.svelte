@@ -346,7 +346,9 @@
         <tbody>
           {#each filteredApplications as app}
             <tr>
-              <td>{app.id}</td>
+              <td>
+                <a href="#applications/{app.id}" class="app-id-link">{app.id}</a>
+              </td>
               <td>{app.applicantName}</td>
               <td>
                 <span class="status-badge status-{app.status.toLowerCase().replace(' ', '-')}">
@@ -360,6 +362,7 @@
                 <button class="action-btn" on:click={() => openActionModal(app)}>
                   {getActionText(app)}
                 </button>
+                <a href="#applications/{app.id}" class="detail-link">View Details</a>
               </td>
             </tr>
           {/each}
@@ -554,7 +557,7 @@
 <style>
   .applications-container {
     padding: 1rem;
-    max-width: 1200px;
+    max-width: 980px;
     margin: 0 auto;
   }
   
@@ -940,6 +943,29 @@
   .reinstate-btn:disabled {
     background-color: #6c757d;
     cursor: not-allowed;
+  }
+  
+  .app-id-link {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 500;
+  }
+  
+  .app-id-link:hover {
+    text-decoration: underline;
+  }
+  
+  .detail-link {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-decoration: none;
+  }
+  
+  .detail-link:hover {
+    color: #007bff;
+    text-decoration: underline;
   }
 
   /* Responsive adjustments */
