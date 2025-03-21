@@ -5,6 +5,8 @@
   import Login from './routes/Login.svelte';
   import ApplicationList from './routes/ApplicationList.svelte';
   import Home from './routes/Home.svelte';
+  import RWR from './routes/RWR.svelte';
+  import Reports from './routes/Reports.svelte';
   
   console.log('App.svelte script executed');
   
@@ -119,6 +121,12 @@
     
     {:else if currentRoute === 'applications'}
       <ApplicationList />
+    
+    {:else if currentRoute === 'rwr'}
+      <RWR />
+      
+    {:else if currentRoute === 'reports'}
+      <Reports />
     
     {:else if currentRoute === 'msw-test'}
       <section>

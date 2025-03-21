@@ -14,6 +14,13 @@
   let sortField = 'id';
   let sortDirection = 'asc';
   
+  // Modal state for application actions
+  let showActionModal = false;
+  let selectedApp = null;
+  let selectedStatus = '';
+  let actionNotes = '';
+  let isSubmitting = false;
+  
   // Define available statuses for filtering
   const statusOptions = [
     { value: 'all', label: 'All Statuses' },
@@ -138,6 +145,96 @@
     }
     return 'View';
   }
+  
+  // Open modal to perform action on an application
+  function openActionModal(app) {
+    selectedApp = app;
+    selectedStatus = app.status;
+    actionNotes = '';
+    showActionModal = true;
+  }
+  
+  // Close modal
+  function closeModal() {
+    showActionModal = false;
+    selectedApp = null;
+  }
+  
+  // Update application status
+  async function updateApplicationStatus() {
+    if (!selectedApp) return;
+    
+    isSubmitting = true;
+    
+    try {
+      const updates = {
+        status: selectedStatus,
+        notes: actionNotes,
+        updatedBy: $userRole,
+        updateDate: new Date().toISOString().split('T')[0]
+      };
+      
+      // Call API to update application status
+      const response = await fetch(`/api/applications/${selectedApp.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      });
+      
+      if (response.ok) {
+        // Refresh the applications list
+        await loadApplications();
+        closeModal();
+      } else {
+        throw new Error(`Failed to update status: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('Error updating application status:', err);
+      error = err.message;
+    } finally {
+      isSubmitting = false;
+    }
+  }
+  
+  // Reinstate application (Program Officer only)
+  async function reinstateApplication() {
+    if (!selectedApp || !$isProgramOfficer) return;
+    
+    isSubmitting = true;
+    
+    try {
+      const updates = {
+        status: 'Eligible',
+        reinstatedBy: $userRole,
+        reinstateDate: new Date().toISOString().split('T')[0],
+        reinstateReason: actionNotes
+      };
+      
+      // Call API to reinstate application
+      const response = await fetch(`/api/applications/${selectedApp.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      });
+      
+      if (response.ok) {
+        // Refresh the applications list
+        await loadApplications();
+        closeModal();
+      } else {
+        throw new Error(`Failed to reinstate application: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('Error reinstating application:', err);
+      error = err.message;
+    } finally {
+      isSubmitting = false;
+    }
+  }
 </script>
 
 <div class="applications-container">
@@ -246,7 +343,7 @@
               <td>{app.rwr && app.rwr.length > 0 ? 'Yes' : 'No'}</td>
               <td>{app.submissionDate || 'N/A'}</td>
               <td>
-                <button class="action-btn">
+                <button class="action-btn" on:click={() => openActionModal(app)}>
                   {getActionText(app)}
                 </button>
               </td>
@@ -258,6 +355,126 @@
     
     <div class="applications-footer">
       <p>Showing {filteredApplications.length} of {applications.length} applications</p>
+    </div>
+  {/if}
+  
+  <!-- Application Action Modal -->
+  {#if showActionModal}
+    <div class="modal-backdrop">
+      <div class="action-modal">
+        <div class="modal-header">
+          <h2>
+            {#if $isScreener}
+              Update Application Status
+            {:else if $isManager}
+              Manage Application
+            {:else if $isProgramOfficer && selectedApp?.status === 'Ineligible' || selectedApp?.status === 'Non-Compliant'}
+              Reinstate Application
+            {:else}
+              Application Details
+            {/if}
+          </h2>
+          <button class="close-btn" on:click={closeModal}>&times;</button>
+        </div>
+        
+        <div class="modal-body">
+          {#if selectedApp}
+            <div class="modal-section">
+              <h3>Application Details</h3>
+              <div class="application-details">
+                <p><strong>ID:</strong> {selectedApp.id}</p>
+                <p><strong>Applicant:</strong> {selectedApp.applicantName}</p>
+                <p><strong>Program:</strong> {selectedApp.program || 'N/A'}</p>
+                <p><strong>Submission Date:</strong> {selectedApp.submissionDate || 'N/A'}</p>
+                <p><strong>Current Status:</strong> {selectedApp.status}</p>
+              </div>
+            </div>
+            
+            {#if $isScreener || $isManager}
+              <div class="modal-section">
+                <h3>Update Status</h3>
+                <div class="form-group">
+                  <label for="status-select">Status:</label>
+                  <select id="status-select" bind:value={selectedStatus}>
+                    <option value="Pending">Pending Review</option>
+                    <option value="Eligible">Eligible</option>
+                    <option value="Non-Compliant">Non-Compliant</option>
+                    <option value="Ineligible">Ineligible</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="action-notes">Notes:</label>
+                  <textarea 
+                    id="action-notes" 
+                    bind:value={actionNotes} 
+                    placeholder="Enter any notes about this status change..."
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+            {:else if $isProgramOfficer && (selectedApp.status === 'Ineligible' || selectedApp.status === 'Non-Compliant')}
+              <div class="modal-section">
+                <h3>Reinstatement Information</h3>
+                <p class="reinstate-info">
+                  Reinstating this application will change its status to <strong>Eligible</strong>.
+                </p>
+                
+                <div class="form-group">
+                  <label for="reinstate-reason">Reason for Reinstatement:</label>
+                  <textarea 
+                    id="reinstate-reason" 
+                    bind:value={actionNotes} 
+                    placeholder="Enter reason for reinstating this application..."
+                    rows="3"
+                    required
+                  ></textarea>
+                </div>
+              </div>
+            {/if}
+            
+            {#if selectedApp.rwr && selectedApp.rwr.length > 0}
+              <div class="modal-section">
+                <h3>RWR Information</h3>
+                <ul class="rwr-list">
+                  {#each selectedApp.rwr as rwr}
+                    <li>
+                      <div class="rwr-item">
+                        <p><strong>Code:</strong> {rwr.code}</p>
+                        <p><strong>Reason:</strong> {rwr.reason}</p>
+                        <p><strong>Date Issued:</strong> {rwr.dateIssued || 'N/A'}</p>
+                        <p><strong>Clarifiable:</strong> {rwr.clarifiable ? 'Yes' : 'No'}</p>
+                      </div>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+          {/if}
+        </div>
+        
+        <div class="modal-footer">
+          <button class="cancel-btn" on:click={closeModal}>Cancel</button>
+          
+          {#if $isScreener || $isManager}
+            <button 
+              class="submit-btn" 
+              on:click={updateApplicationStatus} 
+              disabled={isSubmitting || selectedStatus === selectedApp?.status}
+            >
+              {isSubmitting ? 'Updating...' : 'Update Status'}
+            </button>
+          {:else if $isProgramOfficer && (selectedApp?.status === 'Ineligible' || selectedApp?.status === 'Non-Compliant')}
+            <button 
+              class="reinstate-btn" 
+              on:click={reinstateApplication} 
+              disabled={isSubmitting || !actionNotes}
+            >
+              {isSubmitting ? 'Processing...' : 'Reinstate Application'}
+            </button>
+          {/if}
+        </div>
+      </div>
     </div>
   {/if}
 </div>
@@ -433,6 +650,168 @@
     text-align: right;
   }
   
+  /* Modal styles */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .action-modal {
+    background-color: white;
+    border-radius: 6px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .modal-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #495057;
+  }
+  
+  .application-details {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+  }
+  
+  .application-details p {
+    margin: 0.5rem 0;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+  }
+  
+  .rwr-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .rwr-item {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .rwr-item p {
+    margin: 0.25rem 0;
+  }
+  
+  .reinstate-info {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  
+  .cancel-btn {
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    color: #495057;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .cancel-btn:hover {
+    background-color: #e9ecef;
+  }
+  
+  .submit-btn {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .reinstate-btn {
+    padding: 0.5rem 1rem;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .submit-btn:hover:not(:disabled),
+  .reinstate-btn:hover:not(:disabled) {
+    filter: brightness(90%);
+  }
+  
+  .submit-btn:disabled,
+  .reinstate-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .filter-controls {
