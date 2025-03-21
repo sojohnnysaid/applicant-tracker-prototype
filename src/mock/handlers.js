@@ -21,7 +21,7 @@ const mockData = {
     clarificationPending: 8
   },
   
-  // Sample application data for our app - enhanced structure
+  // Sample application data for our app - enhanced structure with status history
   applications: [
     { 
       id: 'APP-001', 
@@ -30,7 +30,21 @@ const mockData = {
       program: 'Computer Science',
       submissionDate: '2025-02-12',
       assignedTo: 'Screener',
-      rwr: []
+      rwr: [],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-12T14:30:45Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Eligible', 
+          date: '2025-02-25T09:15:22Z', 
+          changedBy: 'Screener', 
+          note: 'All requirements met' 
+        }
+      ]
     },
     { 
       id: 'APP-002', 
@@ -45,6 +59,20 @@ const mockData = {
           reason: 'Missing Transcript', 
           dateIssued: '2025-03-01',
           clarifiable: true
+        }
+      ],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-15T08:45:12Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Non-Compliant', 
+          date: '2025-03-01T11:23:54Z', 
+          changedBy: 'Screener', 
+          note: 'Missing required transcript' 
         }
       ]
     },
@@ -62,6 +90,20 @@ const mockData = {
           dateIssued: '2025-03-02',
           clarifiable: false
         }
+      ],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-10T10:22:33Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Ineligible', 
+          date: '2025-03-02T14:05:17Z', 
+          changedBy: 'Manager', 
+          note: 'Previous fellowship recipient' 
+        }
       ]
     },
     { 
@@ -71,7 +113,15 @@ const mockData = {
       program: 'Mathematics',
       submissionDate: '2025-02-20',
       assignedTo: 'Screener',
-      rwr: []
+      rwr: [],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-20T16:15:43Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        }
+      ]
     },
     { 
       id: 'APP-005', 
@@ -80,7 +130,21 @@ const mockData = {
       program: 'Chemistry',
       submissionDate: '2025-02-17',
       assignedTo: 'Screener',
-      rwr: []
+      rwr: [],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-17T09:30:25Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Eligible', 
+          date: '2025-02-28T13:45:30Z', 
+          changedBy: 'Screener', 
+          note: 'All requirements met' 
+        }
+      ]
     },
     { 
       id: 'APP-006', 
@@ -89,7 +153,15 @@ const mockData = {
       program: 'Engineering',
       submissionDate: '2025-02-19',
       assignedTo: 'Screener',
-      rwr: []
+      rwr: [],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-19T11:10:55Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        }
+      ]
     },
     { 
       id: 'APP-007', 
@@ -105,6 +177,20 @@ const mockData = {
           dateIssued: '2025-03-01',
           clarifiable: true
         }
+      ],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-11T13:20:18Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Non-Compliant', 
+          date: '2025-03-01T10:05:44Z', 
+          changedBy: 'Screener', 
+          note: 'Incomplete application' 
+        }
       ]
     },
     { 
@@ -114,7 +200,21 @@ const mockData = {
       program: 'Physics',
       submissionDate: '2025-02-14',
       assignedTo: 'Screener',
-      rwr: []
+      rwr: [],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-14T15:40:22Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Eligible', 
+          date: '2025-02-27T14:35:10Z', 
+          changedBy: 'Screener', 
+          note: 'All requirements met' 
+        }
+      ]
     },
     { 
       id: 'APP-009', 
@@ -123,7 +223,15 @@ const mockData = {
       program: 'Computer Science',
       submissionDate: '2025-02-21',
       assignedTo: 'Screener',
-      rwr: []
+      rwr: [],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-21T08:30:15Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        }
+      ]
     },
     { 
       id: 'APP-010', 
@@ -138,6 +246,20 @@ const mockData = {
           reason: 'Ineligible Field of Study', 
           dateIssued: '2025-03-03',
           clarifiable: false
+        }
+      ],
+      statusHistory: [
+        { 
+          status: 'Pending', 
+          date: '2025-02-13T09:25:33Z', 
+          changedBy: 'System', 
+          note: 'Application received' 
+        },
+        { 
+          status: 'Ineligible', 
+          date: '2025-03-03T13:50:20Z', 
+          changedBy: 'Manager', 
+          note: 'Ineligible field of study' 
         }
       ]
     }
@@ -257,9 +379,30 @@ export const handlers = [
     const appIndex = mockData.applications.findIndex(app => app.id === id);
     
     if (appIndex !== -1) {
+      const currentApp = mockData.applications[appIndex];
+      
+      // Check if status is changing and add to history if it is
+      if (updates.status && updates.status !== currentApp.status) {
+        // Ensure statusHistory exists
+        if (!currentApp.statusHistory) {
+          currentApp.statusHistory = [];
+        }
+        
+        // Add status change to history with detailed timestamp in UTC
+        const statusEntry = {
+          status: updates.status,
+          date: updates.updateDate || new Date().toISOString(),
+          changedBy: updates.updatedBy || 'Unknown',
+          note: updates.notes || ''
+        };
+        
+        // Update application with new status history
+        updates.statusHistory = [...currentApp.statusHistory, statusEntry];
+      }
+      
       // Update application data with request body
       mockData.applications[appIndex] = {
-        ...mockData.applications[appIndex],
+        ...currentApp,
         ...updates
       };
       
@@ -293,25 +436,58 @@ export const handlers = [
     const appIndex = mockData.applications.findIndex(app => app.id === id);
     
     if (appIndex !== -1) {
-      // Add RWR to application
-      const updatedApp = {
-        ...mockData.applications[appIndex],
-        status: 'Non-Compliant', // Update status
-        rwr: [
-          ...mockData.applications[appIndex].rwr,
-          {
-            ...rwrData,
-            dateIssued: new Date().toISOString().split('T')[0]
-          }
-        ]
+      const currentApp = mockData.applications[appIndex];
+      const currentDate = new Date().toISOString().split('T')[0];
+      
+      // Prepare RWR details
+      const rwrEntry = {
+        ...rwrData,
+        dateIssued: currentDate
       };
       
-      mockData.applications[appIndex] = updatedApp;
-      
-      return res(
-        ctx.status(201),
-        ctx.json(updatedApp)
-      );
+      // Check if status is changing from current status to Non-Compliant
+      if (currentApp.status !== 'Non-Compliant') {
+        // Ensure statusHistory exists
+        if (!currentApp.statusHistory) {
+          currentApp.statusHistory = [];
+        }
+        
+        // Add RWR issuance to status history with UTC timestamp
+        const statusEntry = {
+          status: 'Non-Compliant',
+          date: new Date().toISOString(),
+          changedBy: rwrData.issuedBy || 'System',
+          note: `RWR issued: ${rwrData.code} - ${rwrData.reason || ''}`
+        };
+        
+        // Add RWR to application with status history updated
+        const updatedApp = {
+          ...currentApp,
+          status: 'Non-Compliant', // Update status
+          rwr: [...currentApp.rwr, rwrEntry],
+          statusHistory: [...currentApp.statusHistory, statusEntry]
+        };
+        
+        mockData.applications[appIndex] = updatedApp;
+        
+        return res(
+          ctx.status(201),
+          ctx.json(updatedApp)
+        );
+      } else {
+        // Just add the RWR but don't change status history since already Non-Compliant
+        const updatedApp = {
+          ...currentApp,
+          rwr: [...currentApp.rwr, rwrEntry]
+        };
+        
+        mockData.applications[appIndex] = updatedApp;
+        
+        return res(
+          ctx.status(201),
+          ctx.json(updatedApp)
+        );
+      }
     }
     
     return res(

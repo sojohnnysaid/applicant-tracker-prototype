@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { userRole, isScreener, isManager, isProgramOfficer } from '../stores/roleStore';
+  import StatusHistory from '../components/StatusHistory.svelte';
   
   // State variables
   let applications = [];
@@ -20,6 +21,7 @@
   let selectedStatus = '';
   let actionNotes = '';
   let isSubmitting = false;
+  let activeTab = 'details'; // Default active tab
   
   // Define available statuses for filtering
   const statusOptions = [
@@ -151,6 +153,7 @@
     selectedApp = app;
     selectedStatus = app.status;
     actionNotes = '';
+    activeTab = 'details'; // Reset to details tab
     showActionModal = true;
   }
   
@@ -167,28 +170,34 @@
     isSubmitting = true;
     
     try {
-      const updates = {
-        status: selectedStatus,
-        notes: actionNotes,
-        updatedBy: $userRole,
-        updateDate: new Date().toISOString().split('T')[0]
-      };
-      
-      // Call API to update application status
-      const response = await fetch(`/api/applications/${selectedApp.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updates)
-      });
-      
-      if (response.ok) {
-        // Refresh the applications list
-        await loadApplications();
-        closeModal();
+      // Only update if status has changed or notes were added
+      if (selectedStatus !== selectedApp.status || actionNotes.trim() !== '') {
+        const updates = {
+          status: selectedStatus,
+          notes: actionNotes.trim() !== '' ? actionNotes : `Status updated to ${selectedStatus}`,
+          updatedBy: $userRole,
+          updateDate: new Date().toISOString() // Full ISO timestamp with UTC time
+        };
+        
+        // Call API to update application status
+        const response = await fetch(`/api/applications/${selectedApp.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updates)
+        });
+        
+        if (response.ok) {
+          // Refresh the applications list
+          await loadApplications();
+          closeModal();
+        } else {
+          throw new Error(`Failed to update status: ${response.status}`);
+        }
       } else {
-        throw new Error(`Failed to update status: ${response.status}`);
+        // No changes were made, just close the modal
+        closeModal();
       }
     } catch (err) {
       console.error('Error updating application status:', err);
@@ -205,10 +214,15 @@
     isSubmitting = true;
     
     try {
+      const currentDate = new Date().toISOString(); // Full ISO timestamp with UTC time
+      
       const updates = {
         status: 'Eligible',
+        updatedBy: $userRole,
+        updateDate: currentDate,
+        notes: actionNotes,
         reinstatedBy: $userRole,
-        reinstateDate: new Date().toISOString().split('T')[0],
+        reinstateDate: currentDate,
         reinstateReason: actionNotes
       };
       
@@ -379,63 +393,121 @@
         
         <div class="modal-body">
           {#if selectedApp}
-            <div class="modal-section">
-              <h3>Application Details</h3>
-              <div class="application-details">
-                <p><strong>ID:</strong> {selectedApp.id}</p>
-                <p><strong>Applicant:</strong> {selectedApp.applicantName}</p>
-                <p><strong>Program:</strong> {selectedApp.program || 'N/A'}</p>
-                <p><strong>Submission Date:</strong> {selectedApp.submissionDate || 'N/A'}</p>
-                <p><strong>Current Status:</strong> {selectedApp.status}</p>
-              </div>
+            <!-- Modal tabs -->
+            <div class="modal-tabs">
+              <button 
+                class:active={activeTab === 'details'} 
+                on:click={() => activeTab = 'details'}
+              >
+                Details
+              </button>
+              <button 
+                class:active={activeTab === 'history'} 
+                on:click={() => activeTab = 'history'}
+              >
+                Status History
+              </button>
+              {#if selectedApp.rwr && selectedApp.rwr.length > 0}
+                <button 
+                  class:active={activeTab === 'rwr'} 
+                  on:click={() => activeTab = 'rwr'}
+                >
+                  RWR Information
+                </button>
+              {/if}
             </div>
             
-            {#if $isScreener || $isManager}
+            <!-- Details tab -->
+            {#if activeTab === 'details'}
               <div class="modal-section">
-                <h3>Update Status</h3>
-                <div class="form-group">
-                  <label for="status-select">Status:</label>
-                  <select id="status-select" bind:value={selectedStatus}>
-                    <option value="Pending">Pending Review</option>
-                    <option value="Eligible">Eligible</option>
-                    <option value="Non-Compliant">Non-Compliant</option>
-                    <option value="Ineligible">Ineligible</option>
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label for="action-notes">Notes:</label>
-                  <textarea 
-                    id="action-notes" 
-                    bind:value={actionNotes} 
-                    placeholder="Enter any notes about this status change..."
-                    rows="3"
-                  ></textarea>
+                <h3>Application Details</h3>
+                <div class="application-details">
+                  <p><strong>ID:</strong> {selectedApp.id}</p>
+                  <p><strong>Applicant:</strong> {selectedApp.applicantName}</p>
+                  <p><strong>Program:</strong> {selectedApp.program || 'N/A'}</p>
+                  <p><strong>Submission Date:</strong> {selectedApp.submissionDate || 'N/A'}</p>
+                  <p><strong>Current Status:</strong> <span class="status-badge status-{selectedApp.status.toLowerCase().replace(' ', '-')}">{selectedApp.status}</span></p>
+                  <p><strong>Assigned To:</strong> {selectedApp.assignedTo || 'Unassigned'}</p>
                 </div>
               </div>
-            {:else if $isProgramOfficer && (selectedApp.status === 'Ineligible' || selectedApp.status === 'Non-Compliant')}
+              
+              {#if $isScreener || $isManager}
+                <div class="modal-section">
+                  <h3>Update Status</h3>
+                  <div class="form-group">
+                    <label for="status-select">Status:</label>
+                    <select id="status-select" bind:value={selectedStatus}>
+                      <option value="Pending">Pending Review</option>
+                      <option value="Eligible">Eligible</option>
+                      <option value="Non-Compliant">Non-Compliant</option>
+                      <option value="Ineligible">Ineligible</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="action-notes">Notes:</label>
+                    <textarea 
+                      id="action-notes" 
+                      bind:value={actionNotes} 
+                      placeholder="Enter any notes about this status change..."
+                      rows="3"
+                    ></textarea>
+                  </div>
+                </div>
+              {:else if $isProgramOfficer && (selectedApp.status === 'Ineligible' || selectedApp.status === 'Non-Compliant')}
+                <div class="modal-section">
+                  <h3>Reinstatement Information</h3>
+                  <p class="reinstate-info">
+                    Reinstating this application will change its status to <strong>Eligible</strong>.
+                  </p>
+                  
+                  <div class="form-group">
+                    <label for="reinstate-reason">Reason for Reinstatement:</label>
+                    <textarea 
+                      id="reinstate-reason" 
+                      bind:value={actionNotes} 
+                      placeholder="Enter reason for reinstating this application..."
+                      rows="3"
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+              {/if}
+            {/if}
+            
+            <!-- Status History tab -->
+            {#if activeTab === 'history'}
               <div class="modal-section">
-                <h3>Reinstatement Information</h3>
-                <p class="reinstate-info">
-                  Reinstating this application will change its status to <strong>Eligible</strong>.
-                </p>
+                <StatusHistory statusHistory={selectedApp.statusHistory || []} />
                 
-                <div class="form-group">
-                  <label for="reinstate-reason">Reason for Reinstatement:</label>
-                  <textarea 
-                    id="reinstate-reason" 
-                    bind:value={actionNotes} 
-                    placeholder="Enter reason for reinstating this application..."
-                    rows="3"
-                    required
-                  ></textarea>
+                <div class="history-legend">
+                  <h4>Status Types:</h4>
+                  <div class="legend-items">
+                    <div class="legend-item">
+                      <span class="status-badge status-eligible">Eligible</span>
+                      <span class="legend-description">Application meets all requirements</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="status-badge status-ineligible">Ineligible</span>
+                      <span class="legend-description">Application does not meet program requirements</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="status-badge status-non-compliant">Non-Compliant</span>
+                      <span class="legend-description">Missing required documents or information</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="status-badge status-pending">Pending</span>
+                      <span class="legend-description">Application awaiting review</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             {/if}
             
-            {#if selectedApp.rwr && selectedApp.rwr.length > 0}
+            <!-- RWR Info tab -->
+            {#if activeTab === 'rwr' && selectedApp.rwr && selectedApp.rwr.length > 0}
               <div class="modal-section">
-                <h3>RWR Information</h3>
+                <h3>Return Without Review Information</h3>
                 <ul class="rwr-list">
                   {#each selectedApp.rwr as rwr}
                     <li>
@@ -697,6 +769,64 @@
   
   .modal-body {
     padding: 1.5rem;
+  }
+  
+  .modal-tabs {
+    display: flex;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 1.5rem;
+  }
+  
+  .modal-tabs button {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #6c757d;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  
+  .modal-tabs button:hover {
+    color: #495057;
+    background-color: #f8f9fa;
+  }
+  
+  .modal-tabs button.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+  }
+  
+  .history-legend {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  .history-legend h4 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    color: #495057;
+  }
+  
+  .legend-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .legend-description {
+    font-size: 0.85rem;
+    color: #6c757d;
   }
   
   .modal-section {
