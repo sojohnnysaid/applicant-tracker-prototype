@@ -1,19 +1,28 @@
 <script>
   import { onMount } from 'svelte';
+  import { userRole, isLoggedIn } from './stores/roleStore';
+  import NavBar from './components/NavBar.svelte';
+  import Login from './routes/Login.svelte';
+  import ApplicationList from './routes/ApplicationList.svelte';
+  import Home from './routes/Home.svelte';
+  
   console.log('App.svelte script executed');
+  
+  // Router state
+  let currentRoute = 'home';
   
   // Generate title based on current route
   $: pageTitle = currentRoute === 'home' 
     ? 'GRFP Application Tracker' 
-    : `${currentRoute === 'msw-test' ? 'MSW Test' : currentRoute.charAt(0).toUpperCase() + currentRoute.slice(1)} | GRFP Application Tracker`;
+    : `${capitalizeFirstLetter(currentRoute)} | GRFP Application Tracker`;
   
-  // Simple counter state
-  let counter = 0;
+  // Helper to capitalize first letter
+  function capitalizeFirstLetter(string) {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
   
-  // Simple router state
-  let currentRoute = 'home';
-  
-  // State for API test results
+  // MSW Testing page state (kept from original)
   let testApiResult = null;
   let userApiResult = null;
   let itemsApiResult = null;
@@ -24,19 +33,25 @@
   
   onMount(async () => {
     console.log('App.svelte component mounted');
+    
+    // Check if user is logged in from localStorage
+    const savedRole = localStorage.getItem('userRole');
+    if (!savedRole) {
+      // Redirect to login if not logged in
+      navigateTo('login');
+    }
   });
   
-  function incrementCounter() {
-    counter += 1;
-    console.log('Counter incremented to:', counter);
-  }
-  
+  // Navigation function
   function navigateTo(route) {
     console.log(`Navigating to: ${route}`);
     currentRoute = route;
+    
+    // Update page scroll position
+    window.scrollTo(0, 0);
   }
   
-  // Function to test the MSW endpoints
+  // Function to test the MSW endpoints (kept from original)
   async function testMswEndpoints() {
     isLoading = true;
     apiError = null;
@@ -76,6 +91,12 @@
       isLoading = false;
     }
   }
+  
+  // Handle role changes
+  // If role is set to null (logout), navigate to login
+  $: if ($userRole === null && currentRoute !== 'login') {
+    navigateTo('login');
+  }
 </script>
 
 <svelte:head>
@@ -83,56 +104,21 @@
 </svelte:head>
 
 <main>
-  <header>
-    <div class="app-header">
-      <h1>GRFP Application Tracker</h1>
-      <p class="subtitle">Mock Service Worker Integration Test</p>
-    </div>
-    
-    <!-- Simple navigation -->
-    <nav>
-      <button on:click={() => navigateTo('home')} class:active={currentRoute === 'home'}>
-        Home
-      </button>
-      <button on:click={() => navigateTo('msw-test')} class:active={currentRoute === 'msw-test'}>
-        MSW Test
-      </button>
-      <button on:click={() => navigateTo('applications')} class:active={currentRoute === 'applications'}>
-        Applications
-      </button>
-    </nav>
-  </header>
+  <!-- Show navigation bar only if user is logged in -->
+  {#if $isLoggedIn && currentRoute !== 'login'}
+    <NavBar {navigateTo} {currentRoute} />
+  {/if}
   
-  <!-- Simple router implementation -->
+  <!-- Router implementation -->
   <div class="content">
-    {#if currentRoute === 'home'}
-      <section>
-        <h2>Dashboard</h2>
-        <p>Welcome to the GRFP Application Tracker prototype.</p>
-        <p>This simple prototype demonstrates the integration of Mock Service Worker (MSW) for handling API requests.</p>
-        
-        <div class="features-grid">
-          <div class="feature-card">
-            <h3>API Mocking</h3>
-            <p>Simulates backend APIs without a real server</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>Application Tracking</h3>
-            <p>View and manage application statuses</p>
-          </div>
-          
-          <div class="feature-card">
-            <h3>MSW Testing</h3>
-            <p>Click the "MSW Test" tab to test API endpoints</p>
-          </div>
-        </div>
-        
-        <div class="counter-demo">
-          <p>Sample Counter: {counter}</p>
-          <button on:click={incrementCounter}>Increment</button>
-        </div>
-      </section>
+    {#if currentRoute === 'login'}
+      <Login {navigateTo} />
+      
+    {:else if currentRoute === 'home'}
+      <Home {navigateTo} />
+    
+    {:else if currentRoute === 'applications'}
+      <ApplicationList />
     
     {:else if currentRoute === 'msw-test'}
       <section>
@@ -187,55 +173,13 @@
           </div>
         {/if}
       </section>
-    
-    {:else if currentRoute === 'applications'}
-      <section>
-        <h2>Applications</h2>
-        <p>This page demonstrates a simple list of applications using the MSW mock API.</p>
-        
-        <button on:click={async () => {
-          isLoading = true;
-          try {
-            const response = await fetch('/api/applications');
-            applicationsResult = await response.json();
-          } catch (error) {
-            apiError = error.message;
-          } finally {
-            isLoading = false;
-          }
-        }} class="load-button">Load Applications</button>
-        
-        {#if isLoading}
-          <p>Loading applications...</p>
-        {:else if apiError}
-          <div class="error-message">
-            <p>Error: {apiError}</p>
-          </div>
-        {:else if applicationsResult && applicationsResult.length > 0}
-          <table class="applications-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Applicant Name</th>
-                <th>Status</th>
-                <th>Program</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each applicationsResult as app}
-                <tr>
-                  <td>{app.id}</td>
-                  <td>{app.applicantName}</td>
-                  <td class="status-cell {app.status.toLowerCase()}">{app.status}</td>
-                  <td>{app.program}</td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        {:else if applicationsResult}
-          <p>No applications found.</p>
-        {/if}
-      </section>
+      
+    {:else}
+      <div class="not-found">
+        <h2>Page Not Found</h2>
+        <p>The page you're looking for doesn't exist or is still under development.</p>
+        <button on:click={() => navigateTo('home')}>Go to Home</button>
+      </div>
     {/if}
   </div>
 </main>
@@ -243,63 +187,17 @@
 <style>
   main {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  header {
-    margin-bottom: 2rem;
-    text-align: center;
-  }
-  
-  nav {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin: 1rem 0;
-  }
-  
-  nav button {
-    padding: 0.5rem 1rem;
-    background: #f0f0f0;
-    color: #333;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  
-  nav button:hover:not(:disabled) {
-    background: #e0e0e0;
-  }
-  
-  nav button.active {
-    background: #007bff;
-    color: white;
-    border-color: #0069d9;
-  }
-  
-  nav button.active:hover:not(:disabled) {
-    background: #0069d9;
+    padding: 0 1rem;
   }
   
   .content {
-    background: #f9f9f9;
-    padding: 1.5rem;
-    border-radius: 5px;
-    border: 1px solid #eee;
+    min-height: 75vh;
   }
   
   section {
     margin-bottom: 2rem;
-  }
-  
-  .counter-demo {
-    background: #e9ecef;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-top: 1rem;
   }
   
   .action-buttons {
@@ -359,104 +257,16 @@
     cursor: not-allowed;
   }
   
-  .counter-demo button {
-    background: #28a745;
-  }
-  
-  .counter-demo button:hover:not(:disabled) {
-    background: #218838;
-  }
-  
-  /* Features grid on home page */
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin: 1.5rem 0;
-  }
-  
-  .feature-card {
-    background: #f0f7ff;
-    border-radius: 5px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-  
-  .feature-card h3 {
-    margin-top: 0;
-    color: #0056b3;
-  }
-  
-  /* Applications table */
-  .applications-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-  }
-  
-  .applications-table th,
-  .applications-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .applications-table th {
-    background: #f5f5f5;
-    font-weight: 600;
-  }
-  
-  .applications-table tr:hover {
-    background: #f9f9f9;
-  }
-  
-  .status-cell {
-    font-weight: 500;
-    padding: 0.25rem 0.5rem;
-    border-radius: 3px;
-  }
-  
-  .status-cell.eligible {
-    background: #e6ffed;
-    color: #22863a;
-  }
-  
-  .status-cell.non-compliant {
-    background: #fff5f5;
-    color: #d73a49;
-  }
-  
-  .status-cell.ineligible {
-    background: #f8eae7;
-    color: #cb2431;
-  }
-  
-  .status-cell.pending {
-    background: #fff8e1;
-    color: #b08800;
-  }
-  
-  .load-button {
-    margin-top: 1rem;
-    background: #6f42c1;
-  }
-  
-  .load-button:hover:not(:disabled) {
-    background: #5a32a3;
-  }
-  
-  .subtitle {
-    color: #666;
-    font-style: italic;
-    margin-top: -0.5rem;
-  }
-  
-  .app-header {
+  .not-found {
     text-align: center;
-    margin-bottom: 1rem;
+    padding: 3rem 1rem;
+    background: #f9f9f9;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    margin-top: 2rem;
   }
   
-  .app-header h1 {
-    margin-bottom: 0.25rem;
+  .not-found button {
+    margin-top: 1rem;
   }
 </style>
