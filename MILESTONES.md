@@ -1,10 +1,10 @@
 # Milestones
 
-## Milestone 1: Setup and Configuration
-1. Initialize project structure
-2. Set up Svelte and Sakura CSS
-3. Configure Mock Service Worker
-4. Create initial routes
+## Milestone 1: Setup and Configuration ✅
+1. Initialize project structure ✅
+2. Set up Svelte and Sakura CSS ✅
+3. Configure Mock Service Worker ✅
+4. Create initial routes ✅
 
 ## Milestone 2: Core Components
 1. Create Login screen with role selection

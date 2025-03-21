@@ -3,15 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Root Index - GRFP Application Master Tracker</title>
+  <title>GRFP Application Tracker</title>
+  <!-- Using CDN for Sakura CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
+  <!-- App styles are in App.svelte -->
 </head>
 <body>
-  <h1>Root Index File</h1>
-  <p>This is the index.html in the root directory (not in /public).</p>
-  <p>If you see this, Vite is serving from the root directory.</p>
+  <!-- Svelte app will mount here -->
+  <div id="app"></div>
+
+  <!-- Import our main app (now without MSW) -->
+  <script type="module" src="/src/main.js"></script>
   
+  <!-- Simple debug logging -->
   <script>
-    console.log('Root index.html loaded');
+    console.log('index.html loaded');
   </script>
 </body>
 </html>
