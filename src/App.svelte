@@ -7,11 +7,13 @@
   import Home from './routes/Home.svelte';
   import RWR from './routes/RWR.svelte';
   import Reports from './routes/Reports.svelte';
+  import ApplicationDetail from './routes/ApplicationDetail.svelte';
   
   console.log('App.svelte script executed');
   
   // Router state
   let currentRoute = 'home';
+  let routeParams = {};
   
   // Generate title based on current route
   $: pageTitle = currentRoute === 'home' 
@@ -42,15 +44,55 @@
       // Redirect to login if not logged in
       navigateTo('login');
     }
+    
+    // Set up hash-based routing
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   });
   
-  // Navigation function
-  function navigateTo(route) {
-    console.log(`Navigating to: ${route}`);
-    currentRoute = route;
+  // Handle hash-based routing
+  function handleHashChange() {
+    const hash = window.location.hash.slice(1) || '/';
+    const [routePath, ...params] = hash.split('/').filter(Boolean);
+    
+    console.log('Hash changed:', hash, 'Route:', routePath, 'Params:', params);
+    
+    if (routePath === 'applications' && params.length > 0) {
+      // If route is /applications/{id}, then it's an application detail view
+      routeParams = { id: params[0] };
+      currentRoute = 'application-detail';
+    } else if (routePath) {
+      currentRoute = routePath;
+      routeParams = {};
+    } else {
+      currentRoute = 'home';
+      routeParams = {};
+    }
     
     // Update page scroll position
     window.scrollTo(0, 0);
+  }
+  
+  // Navigation function
+  function navigateTo(route, params = {}) {
+    console.log(`Navigating to: ${route}`, params);
+    
+    if (Object.keys(params).length > 0) {
+      // Handle routes with parameters
+      if (route === 'application-detail' && params.id) {
+        window.location.hash = `applications/${params.id}`;
+      } else {
+        window.location.hash = route;
+        routeParams = params;
+      }
+    } else {
+      window.location.hash = route;
+      routeParams = {};
+    }
   }
   
   // Function to test the MSW endpoints (kept from original)
@@ -121,6 +163,9 @@
     
     {:else if currentRoute === 'applications'}
       <ApplicationList />
+    
+    {:else if currentRoute === 'application-detail'}
+      <ApplicationDetail id={routeParams.id} />
     
     {:else if currentRoute === 'rwr'}
       <RWR />
