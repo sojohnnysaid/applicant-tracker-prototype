@@ -4,10 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GRFP Application Master Tracker</title>
+  <!-- Using CDN for Sakura CSS -->
   <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
 </head>
 <body>
+  <!-- Debug message outside the app -->
+  <div id="pre-app-message" style="padding: 10px; background: #eee; text-align: center;">
+    If you can see this text, the HTML loaded but the app may not have initialized yet.
+  </div>
+  
+  <!-- App container -->
   <div id="app"></div>
+  
+  <!-- Load our Svelte app -->
   <script type="module" src="/src/main.js"></script>
+  
+  <!-- Fallback script if module loading fails -->
+  <script>
+    console.log('index.html loaded');
+    setTimeout(() => {
+      // Check if the app div has been populated after a delay
+      const appDiv = document.getElementById('app');
+      const preMessage = document.getElementById('pre-app-message');
+      
+      if (appDiv.children.length === 0) {
+        console.error('App failed to load after 2 seconds');
+        preMessage.innerHTML = '<strong>Error:</strong> App failed to initialize. Check browser console for errors.';
+        preMessage.style.background = '#ffdddd';
+      } else {
+        // App loaded successfully, hide pre-message
+        preMessage.style.display = 'none';
+      }
+    }, 2000);
+  </script>
 </body>
 </html>

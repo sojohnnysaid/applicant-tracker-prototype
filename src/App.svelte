@@ -1,97 +1,74 @@
 <script>
+  // Simplified App.svelte for debugging
   import { onMount } from 'svelte';
-  import NavBar from './components/NavBar.svelte';
-  import Home from './routes/Home.svelte';
-  import Login from './routes/Login.svelte';
-  import ApplicationList from './routes/ApplicationList.svelte';
-  import RWR from './routes/RWR.svelte';
-  import Reports from './routes/Reports.svelte';
-  import { userRole } from './stores/roleStore';
+  console.log('App.svelte script executed');
   
-  // Default route is login
-  let currentRoute = 'login';
-  
-  // Simple routing function
-  function navigateTo(route) {
-    console.log(`Navigating to: ${route}`);
-    currentRoute = route;
-  }
+  let appLoaded = false;
   
   onMount(() => {
-    console.log("App mounted, current role:", $userRole);
-    
-    // If user already has a role, go to home
-    if ($userRole) {
-      currentRoute = 'home';
-    }
-    
-    // Listen for role changes
-    const unsubscribe = userRole.subscribe(value => {
-      console.log("Role changed to:", value);
-      if (value === null) {
-        currentRoute = 'login';
-      }
-    });
-    
-    // Cleanup subscription on component destroy
-    return unsubscribe;
+    console.log('App.svelte mounted');
+    appLoaded = true;
   });
+  
+  function goToLogin() {
+    console.log('Login button clicked');
+    // We'll implement actual login functionality once basic app works
+  }
 </script>
 
-<svelte:head>
-  <!-- Add app.css for additional styles -->
-  <link rel="stylesheet" href="/src/app.css">
-</svelte:head>
-
 <main>
-  <!-- Show navbar only if logged in -->
-  {#if $userRole}
-    <NavBar {navigateTo} />
-  {/if}
-  
   <div class="container">
-    <!-- Simple router -->
-    {#if currentRoute === 'login'}
-      <Login {navigateTo} />
-    {:else if currentRoute === 'home'}
-      <Home {navigateTo} />
-    {:else if currentRoute === 'applications'}
-      <ApplicationList />
-    {:else if currentRoute === 'rwr'}
-      <RWR />
-    {:else if currentRoute === 'reports'}
-      <Reports />
+    <h1>GRFP Application Master Tracker</h1>
+    <p>Simplified version for debugging</p>
+    
+    {#if appLoaded}
+      <div class="debug-info">
+        <p>✅ App successfully loaded!</p>
+      </div>
     {:else}
-      <div class="error-page">
-        <h1>Page Not Found</h1>
-        <p>The route "{currentRoute}" doesn't exist.</p>
-        <button on:click={() => navigateTo('home')}>Go Home</button>
+      <div class="debug-info">
+        <p>⏳ App is loading...</p>
       </div>
     {/if}
+    
+    <button on:click={goToLogin}>Go to Login</button>
   </div>
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-  }
-  
   main {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    padding: 2rem;
+    text-align: center;
   }
   
   .container {
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 1rem;
-    flex: 1;
   }
   
-  .error-page {
-    text-align: center;
-    margin-top: 2rem;
+  h1 {
+    color: #333;
+  }
+  
+  .debug-info {
+    background: #f3f3f3;
+    padding: 1rem;
+    border-radius: 5px;
+    margin: 2rem 0;
+  }
+  
+  button {
+    background: #4a90e2;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background: #3a80d2;
   }
 </style>
